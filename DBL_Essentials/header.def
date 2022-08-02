@@ -1,0 +1,8 @@
+record header
+	oh_number ,d6
+	oh_customer ,a8
+	oh_date ,d8
+	oh_contact ,a8
+	oh_salesrep ,d4
+endrecord
+
