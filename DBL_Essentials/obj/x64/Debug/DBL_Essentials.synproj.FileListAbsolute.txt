@@ -1,1 +1,5 @@
 C:\Users\julia.brunett\source\repos\DBL_Essentials\obj\x64\Debug\DBL_Essentials.synproj.CoreCompileInputs.cache
+C:\Users\julia.brunett\source\repos\DBLEssentials\DBL_Essentials\obj\x64\Debug\DBL_Essentials.synproj.CoreCompileInputs.cache
+C:\Users\julia.brunett\source\repos\DBLEssentials\DBL_Essentials\Debug\x64\DBL_Essentials.dbr
+C:\Users\julia.brunett\source\repos\DBLEssentials\DBL_Essentials\Debug\x64\dbl_essentials.dbp
+C:\Users\julia.brunett\source\repos\DBLEssentials\DBL_Essentials\obj\x64\Debug\DBL_Essentials.dbr

@@ -57,10 +57,8 @@
     <Compile Include="file_access.dbl" />
     <None Include="header.def" />
     <Compile Include="input.dbl" />
-    <Compile Include="I_O.dbl" />
     <Compile Include="wait_key.dbl" />
     <Compile Include="Widgets.dbl" />
-    <Compile Include="Windowing_API.dbl" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Synergex\dbl\Synergex.SynergyDE.Traditional.targets" />
   <PropertyGroup>

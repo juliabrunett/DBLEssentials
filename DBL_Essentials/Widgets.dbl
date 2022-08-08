@@ -1,8 +1,8 @@
 
 ;;; <summary>
-;;; The main entry point for the application.
+;;; The entry point for the application.
 ;;; </summary>
-main Widgets
+main
 
 	.include "WND:windows.def"
 	.include 'INC:header.def'
@@ -12,22 +12,25 @@ main Widgets
 	.define D_INITIAL_ALLOC ,3
 	.define D_INCR_ALLOC ,3
 
-	record data
-		ttchn ,i4 ,1
-		var_input ,a1
-		wndid ,i4 ; Main Menu
-		wndid2 ,i4 ; Create Message
-		wndid3 ,i4 ; Order Header
-		wndid4 ,i4 ; Order Detail
+	record
+		ttchn ,i4 ,1 ; Terminal Channel Number
+		var_input ,a1 ; Input for menu options
+		menu_wndid ,i4 ; Main Menu Window ID
+		
+		header_wndid3 ,i4 ; Order Header Window ID
+		detail_wndid4 ,i4 ; Order Detail Window ID
+
 		wndid5 ,i4 ; View Header
+		wndid6 ,i4 ; Order Details
+		chn1 ,i4 ; ISAM files - header
+		chn2 ,i4 ; ISAM files - detail
+
 		message ,a28 
 		height ,i2 ,15
 		width ,i2 ,30
 		row ,i2 ,9
 		col ,i2 ,30
-		wndtitle ,a20
-		wndname1 ,a7, "Chose 1" ; could delete
-		wndname2 ,a7 ,"Chose 2" ; could delete
+
 		order_option ,a1
 		menu ,i1 ,1
 		i  ,d1 ; increment for the for loop
@@ -36,11 +39,14 @@ main Widgets
 		nmalloc ,i4 ; max stored
 		nmloaded ,i4 ; currently stored
 
-		chn1 ,i4 ; ISAM files
-		chn2 ,i4 ; ISAM files
-
 		result ,FileResult
 		viewing_order ,d6
+
+		; Variables from previous exercises:
+		;wndid2 ,i4 ; Create Message
+		;wndtitle ,a20
+		;wndname1 ,a7, "Chose 1"
+		;wndname2 ,a7 ,"Chose 2" 
 
 	endrecord
 
@@ -63,8 +69,6 @@ startup,
 	open(chn1,U:I,"DAT:header.ism")
 	open(chn2,U:I,"DAT:detail.ism")
 
-
-
 	; Initialize Dynamic Allocation
 	nmalloc = D_INITIAL_ALLOC
 	; Allocate dynamic memory sufficient to store 3 order detail lines
@@ -74,32 +78,30 @@ startup,
 	return
 process,
 	; Create a new window for the application's main menu
-	xcall CREATE_WINDOW(wndid, "WND4", height, width, 9, 30, "Order Processing Menu")
+	xcall CREATE_WINDOW(menu_wndid, "WND4", height, width, 9, 30, "Order Processing Menu")
 	; Display Options 
-	xcall DISPLAY_TEXT(wndid, 2, 4, "1. Add an Order")
-	xcall DISPLAY_TEXT(wndid, 4, 4, "2. View Last Order")
-	xcall DISPLAY_TEXT(wndid, 6, 4, "3. Exit")
+	xcall DISPLAY_TEXT(menu_wndid, 2, 4, "1. Add an Order")
+	xcall DISPLAY_TEXT(menu_wndid, 4, 4, "2. View Last Order")
+	xcall DISPLAY_TEXT(menu_wndid, 6, 4, "3. Exit")
 
 	do
 	begin
 		; Display Message that prompts to select one of available options
-		xcall DISPLAY_TEXT(wndid, 8, 4, "Choose an option:")
-		; Use Wait Key to prompt the user to selecta menu entry
-		xcall WAIT_KEY(wndid, 0, 1, var_input)
+		xcall DISPLAY_TEXT(menu_wndid, 8, 4, "Choose an option:")
+		; Use Wait Key to prompt the user to select a menu entry
+		xcall WAIT_KEY(menu_wndid, 0, 1, var_input)
 
 		; Code to decode which character the user typed
 		using var_input select
 		("1"),
-		;xcall DISPLAY_MESSAGE("You chose 1", wndid2, wndname1, width, col)
+			;xcall DISPLAY_MESSAGE("You chose 1", wndid2, wndname1, width, col) ;previous exercise
 			call ORDER_HEADER
 		("2"),
 			
-		;xcall DISPLAY_MESSAGE("You chose 2", wndid2, wndname2, width, col)
+			;xcall DISPLAY_MESSAGE("You chose 2", wndid2, wndname2, width, col) ;previous exercise
 			call VIEW_ORDER
-
-			
-		(),
-			xcall DISPLAY_MESSAGE("Invalid choice", wndid2, "INVALID", width, col)
+		;(),
+			;xcall DISPLAY_MESSAGE("Invalid choice", wndid2, "INVALID", width, col) ;previous exercise
 			
 		endusing
 		
@@ -107,7 +109,7 @@ process,
 	until(var_input.eqs."3")
 
 	; Terminate the program
-	xcall DELETE_WINDOW(wndid)
+	xcall DELETE_WINDOW(menu_wndid)
 
 	return
 
@@ -127,48 +129,46 @@ shutdown,
 
 ; Internal Subroutine
 ORDER_HEADER,
-	; Create window for the order header inormation
-	xcall CREATE_WINDOW(wndid3, "Order Header", height, width, 9, 30, "Add an Order: Header Details")
+	; Create window for the order header information
+	xcall CREATE_WINDOW(header_wndid3, "Order Header", height, width, 9, 30, "Add an Order: Header Details")
 
 	do
 	begin
 		; Display appropriate prompts for all fields in header record
-		xcall DISPLAY_TEXT(wndid3, 2, 4, "Order Number: ")
-		xcall input(wndid3, 2, 20, header.oh_number,1,0,0)
+		xcall DISPLAY_TEXT(header_wndid3, 2, 4, "Order Number: ")
+		xcall input(header_wndid3, 2, 20, header.oh_number,1,0,0)
 
 		; NEEDS WORK
 		if (%file_access(FileOp.Find,chn1,header,oh_number).eq.FileResult.OK)
 		begin
-			xcall DISPLAY_TEXT(wndid3, 8, 4, "Order # Already Exists")
-			xcall input(wndid3, 2, 20, header.oh_number,1,0,0)
+			xcall DISPLAY_TEXT(header_wndid3, 8, 4, "Order # Already Exists")
+			xcall input(header_wndid3, 2, 20, header.oh_number,1,0,0)
 
 		end
-
 
 		if(header.oh_number.eq.000000)
 			return
 
-		xcall DISPLAY_TEXT(wndid3, 3, 4, "Date:")
-		xcall input(wndid3, 3, 20, header.oh_date,1,0,1)
+		xcall DISPLAY_TEXT(header_wndid3, 3, 4, "Date:")
+		xcall input(header_wndid3, 3, 20, header.oh_date,1,0,1)
 
-		xcall DISPLAY_TEXT(wndid3, 4, 4, "Customer:")
-		xcall input(wndid3, 4, 20, header.oh_customer,1,0,0)
+		xcall DISPLAY_TEXT(header_wndid3, 4, 4, "Customer:")
+		xcall input(header_wndid3, 4, 20, header.oh_customer,1,0,0)
 
-		xcall DISPLAY_TEXT(wndid3, 5, 4, "Sales Rep Code:")
-		xcall input(wndid3, 5, 20, header.oh_salesrep,1,0,0)
+		xcall DISPLAY_TEXT(header_wndid3, 5, 4, "Sales Rep Code:")
+		xcall input(header_wndid3, 5, 20, header.oh_salesrep,1,0,0)
 
-		xcall DISPLAY_TEXT(wndid3, 6, 4, "Contact:")
-		xcall input(wndid3, 6, 20, header.oh_contact,1,0,0)
+		xcall DISPLAY_TEXT(header_wndid3, 6, 4, "Contact:")
+		xcall input(header_wndid3, 6, 20, header.oh_contact,1,0,0)
 
 		result = %file_access(FileOp.Create,chn1,header)
 
 		; Call clear box
 		for i from 2 thru 6
 			begin
-				xcall CLEAR_BOX(wndid3, i, 20, i, 30)
+				xcall CLEAR_BOX(header_wndid3, i, 20, i, 30)
 			end
 
-		;repeat
 		begin
 			if(nmloaded.ge.nmalloc) ; if need to resize
 			begin
@@ -185,75 +185,130 @@ ORDER_HEADER,
 	; Keep accepting new orders until the user enters a blank oh_number (zero: decimal field)
 	until(menu.eq.0)
 
+	; Clear the box
+	xcall CLEAR_BOX(header_wndid3,4,20,9,60)
+
+	xcall DELETE_WINDOW(header_wndid3)
+
 	return
 
 ORDER_DETAIL,
 	; Create a window for the Order Detail
-	xcall CREATE_WINDOW(wndid4, "Order Detail", height, width, 9, 30, "Add an Order: Order Details")
+	xcall CREATE_WINDOW(detail_wndid4, "Order Detail", height, width, 9, 30, "Add an Order: Order Details")
 
-	;do
 	begin
 		; Display appropriate prompts for all of the fields in the detail structure
-		xcall DISPLAY_TEXT(wndid4, 2, 4, "Order Number: ")
-		;xcall input(wndid4, 2, 20, detail.od_number,1,0,0)
-		xcall input(wndid4, 2, 20, ^m(strDetail[nmloaded].od_number, handle),1,0,0)
+		xcall DISPLAY_TEXT(detail_wndid4, 2, 4, "Order Number: ")
+		xcall input(detail_wndid4, 2, 20, ^m(strDetail[nmloaded].od_number, handle),1,0,0)
 
-		xcall DISPLAY_TEXT(wndid4, 3, 4, "Item Number:")
-		xcall input(wndid4, 3, 20, ^m(strDetail[nmloaded].od_item, handle),1,0,0)
+		xcall DISPLAY_TEXT(detail_wndid4, 3, 4, "Item Number:")
+		xcall input(detail_wndid4, 3, 20, ^m(strDetail[nmloaded].od_item, handle),1,0,0)
 
-		xcall DISPLAY_TEXT(wndid4, 4, 4, "Part Number:")
-		xcall input(wndid4, 4, 20, 	^m(strDetail[nmloaded].od_part, handle),1,0,0)
+		xcall DISPLAY_TEXT(detail_wndid4, 4, 4, "Part Number:")
+		xcall input(detail_wndid4, 4, 20, 	^m(strDetail[nmloaded].od_part, handle),1,0,0)
 
-		xcall DISPLAY_TEXT(wndid4, 5, 4, "Quantity:")
-		xcall input(wndid4, 5, 20, ^m(strDetail[nmloaded].od_qty, handle),1,0,0)
+		xcall DISPLAY_TEXT(detail_wndid4, 5, 4, "Quantity:")
+		xcall input(detail_wndid4, 5, 20, ^m(strDetail[nmloaded].od_qty, handle),1,0,0)
 
-		xcall DISPLAY_TEXT(wndid4, 6, 4, "Unit Price:")
-		xcall input(wndid4, 6, 20, ^m(strDetail[nmloaded].od_unit_price, handle),1,0,0)
+		xcall DISPLAY_TEXT(detail_wndid4, 6, 4, "Unit Price:")
+		xcall input(detail_wndid4, 6, 20, ^m(strDetail[nmloaded].od_unit_price, handle),1,0,0)
 
 		; Call clear box
 		for i from 2 thru 6
 		begin
-			xcall CLEAR_BOX(wndid4, i, 20, i, 30)
+			xcall CLEAR_BOX(detail_wndid4, i, 20, i, 30)
 		end
 	end
-	;until(^m(strDetail[nmloaded].od_number,handle).eq.0)
 
 	return
 
 VIEW_ORDER,
 	; Display order header window
-	xcall CREATE_WINDOW(wndid5,"View Order", height, width, 9, 30, "View Order")
+	xcall CREATE_WINDOW(header_wndid3,"View Order", height, width, 9, 30, "View Order")
 	; Prompt for an order number
-	xcall DISPLAY_TEXT(wndid5, 2, 4, "Enter Order Num:")
-	xcall input(wndid5, 2, 20, viewing_order,1,0,0)
+	xcall DISPLAY_TEXT(header_wndid3, 2, 4, "Enter Order Num:")
+	xcall DISPLAY_TEXT(header_wndid3, 4, 4, "Date:")
+	xcall DISPLAY_TEXT(header_wndid3, 5, 4, "Customer:")
+	xcall DISPLAY_TEXT(header_wndid3, 6, 4, "Sales Rep Code:")
+	xcall DISPLAY_TEXT(header_wndid3, 7, 4, "Contact:")
 
-	; Look up an order in the ISAM file and display details to window
-	;result = %file_access(FileOp.Find,chn1,header,viewing_order)
-	if(%file_access(FileOp.Find,chn1,header,viewing_order).eq.FileResult.OK) then
-		xcall DISPLAY_TEXT(wndid5, 4,4, %string(header.oh_number))
-	else
+	repeat
 	begin
-		xcall DISPLAY_TEXT(wndid5, 4,4, "File Not Found!")
-		xcall DISPLAY_TEXT(wndid5, 5,4, "Press any key to return")
+		xcall input(header_wndid3, 2, 20, oh_number,1,0,0)
 
+		if oh_number.eq.0
+			exitloop
+
+		; Look up an order in the ISAM file and display details to window
+		if(%file_access(FileOp.ReadNext,chn1,header,oh_number).ne.FileResult.OK) then
+			begin
+				xcall DISPLAY_TEXT(header_wndid3, 9,4, "No records found!")
+				xcall DISPLAY_TEXT(header_wndid3, 10,4, "Enter 0 to return")
+			end
+		else
+		begin
+			xcall DISPLAY_TEXT(header_wndid3,4,20,^a(oh_date))
+			xcall DISPLAY_TEXT(header_wndid3,5,20,oh_customer)
+			xcall DISPLAY_TEXT(header_wndid3,6,20,^a(oh_salesrep))
+			xcall DISPLAY_TEXT(header_wndid3,7,20,oh_contact)
+
+			xcall DISPLAY_TEXT(header_wndid3,12,4, "Press any key to continue")
+
+			; Wait for keypress
+			xcall WAIT_KEY(header_wndid3,0,1,var_input)
+
+			; Call next function
+			call VIEW_ORDER_DETAILS
+			; Clear the box
+			;xcall CLEAR_BOX(header_wndid3,4,20,9,60)
+		end
 	end
 
-	;FileOp.Read(chn1,header.oh_date)
-	;FileOp.Read(chn1,header.oh_customer)
-	;FileOp.Read(chn1,header.oh_salesrep)
-	;FileOp.Read(chn1,header.oh_contact)
-
-
-	; Wait for keypress
-	xcall WAIT_KEY(wndid5,0,1,var_input)
-
+	xcall DELETE_WINDOW(header_wndid3)
+	
 	; Loop back and prompt for next order to be displayed (when blank, return to main menu)
 	return
 
 VIEW_ORDER_DETAILS,
-	; Create and display an order detail window
-	; Read all order detail records for the selected order & display each in turn into the window
-	; Waiting for key press after each record
-	; You don't have a detail record to read data into (structure), could use first element of dynamic mem as buffer for inpuy
-	; When all detail lines have been displayed, remove detail window and return to view order header window
+
+	;if (%file_access(FileOp.ReadNext,chn2,strDetail[nmloaded],oh_number).ne.FileResult.OK) then
+	;	xcall DISPLAY_MESSAGE("No order detail records found!", detail_wndid4, "INVALID", width, col)
+	;else
+
+	begin
+		; Create and display an order detail window
+		xcall CREATE_WINDOW(detail_wndid4,"Detail", height, width, 9, 30, "Order Detail")
+		
+		; Read all order detail records for the selected order & display each in turn into the window
+		xcall DISPLAY_TEXT(detail_wndid4,2,2,"  Part code:")
+		xcall DISPLAY_TEXT(detail_wndid4,4,2,"   Quantity:")
+		xcall DISPLAY_TEXT(detail_wndid4,5,2,"      Price:")
+		; Waiting for key press after each record
+		repeat
+		begin
+			if (%file_access(FileOp.ReadNext,chn2,^m(strDetail[1],handle)).ne.FileResult.OK) then
+				exitloop
+			else
+			begin
+				if ^m(strDetail[1].od_number,handle).ne.oh_number then
+					exitloop
+				else
+				begin
+					data keyPressed, a1
+
+					xcall DISPLAY_TEXT(detail_wndid4,2,15,^m(strDetail[1].od_part,handle))
+					xcall DISPLAY_TEXT(detail_wndid4,4,15,^a(^m(strDetail[1].od_qty,handle)))
+					xcall DISPLAY_TEXT(detail_wndid4,5,15,^a(^m(strDetail[1].od_unit_price,handle)))
+
+					xcall DISPLAY_TEXT(detail_wndid4,9,2,"Press RETURN for the next item: ")
+					xcall WAIT_KEY(detail_wndid4,0,1,var_input) 
+
+				end
+			end
+		end
+	end
+
+	;xcall delete_window(wndid6)
+
+	return
 endmain

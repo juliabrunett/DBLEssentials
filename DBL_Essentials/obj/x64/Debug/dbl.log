@@ -1,10 +1,2 @@
-"C:\Users\julia.brunett\source\repos\DBL_Essentials\Widgets.dbl"(5):main Widgets
-%DBL-E-MULTMAIN, More than one main routine encountered
-"C:\Users\julia.brunett\source\repos\DBL_Essentials\Windowing_API.dbl"(5):main
-%DBL-E-MULTMAIN, More than one main routine encountered
-%DBL-E-NOOBJ, No object file created
-
-
-Errors:         2, in file C:\Users\julia.brunett\source\repos\DBL_Essentials\clear_box.dbl
 
 
